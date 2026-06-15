@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pigment Value Intelligence - ROI Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', system-ui, sans-serif; background: #f8f9fb; color: #111827; font-size: 14px; line-height: 1.5; }
+  .page { max-width: 1120px; margin: 0 auto; padding: 28px 24px 48px; }
+  .top-header { margin-bottom: 22px; }
+  .top-header .brand { font-size: 11px; color: #9ca3af; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+  .top-header h1 { font-size: 22px; font-weight: 600; }
+  .top-header p { font-size: 13px; color: #6b7280; margin-top: 4px; }
+  .uc-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid #e5e7eb; align-items: center; }
+  .uc-label { font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin-right: 4px; }
+  .uc-pill { padding: 5px 14px; border-radius: 20px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: all 0.15s; background: #f3f4f6; color: #6b7280; }
+  .uc-pill.active { color: #fff; }
+  .real-bar { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; }
+  .real-big { font-size: 22px; font-weight: 600; color: #2d6a2d; line-height: 1; }
+  .real-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 2px; }
+  .real-note { flex-shrink: 0; max-width: 260px; font-size: 11px; color: #9ca3af; line-height: 1.5; border-left: 1px solid #f3f4f6; padding-left: 16px; }
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 16px 20px; margin-bottom: 14px; }
+  .card:last-child { margin-bottom: 0; }
+  .card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 14px; }
+  .card-uc-head { font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 5px; }
+  .field-val { font-weight: 600; color: #111827; }
+  input[type=range] { width: 100%; accent-color: #2d6a2d; cursor: pointer; touch-action: pan-x; -webkit-appearance: none; appearance: none; height: 4px; background: #e5e7eb; border-radius: 2px; outline: none; padding: 0; margin: 6px 0; pointer-events: all; position: relative; z-index: 1; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #2d6a2d; cursor: grab; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  input[type=range]::-webkit-slider-thumb:active { cursor: grabbing; box-shadow: 0 0 0 4px rgba(45,106,45,0.15); }
+  input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #2d6a2d; cursor: grab; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
+  input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: #e5e7eb; }
+  input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: #e5e7eb; }
+  .badge { display: inline-block; font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 5px; font-weight: 600; letter-spacing: 0.03em; vertical-align: middle; }
+  .badge-s { background: #eaf3de; color: #3B6D11; }
+  .badge-e { background: #E6F1FB; color: #185FA5; }
+  .badge-i { background: #FAEEDA; color: #854F0B; }
+  .badge-override { background: #E6F1FB; color: #0C447C; font-size: 10px; padding: 1px 6px; border-radius: 10px; margin-left: 5px; font-weight: 600; vertical-align: middle; }
+  .adv-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; margin-top: 14px; padding-top: 12px; border-top: 1px dashed #e5e7eb; font-size: 11px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; user-select: none; background: none; border-left: none; border-right: none; border-bottom: none; font-family: inherit; width: 100%; text-align: left; }
+  .adv-toggle:hover { color: #6b7280; }
+  .adv-toggle .arrow { font-size: 10px; transition: transform 0.2s; display: inline-block; }
+  .adv-toggle.open .arrow { transform: rotate(90deg); }
+  .adv-section { display: none; margin-top: 12px; padding: 12px 14px; background: #f9fafb; border-radius: 8px; }
+  .adv-section.open { display: block; }
+  .adv-section .field-label { color: #9ca3af; }
+  .adv-driver-header { margin-bottom: 4px; margin-top: 14px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
+  .adv-driver-header:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+  .adv-driver-name { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
+  .adv-driver-bench-line { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; margin-top: 2px; }
+  .adv-driver-bench-val { font-size: 12px; font-weight: 600; color: #374151; }
+  .adv-driver-source { font-size: 10px; color: #b0b7c3; font-style: italic; }
+  .adj-override-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .adj-override-label { font-size: 11px; color: #6b7280; white-space: nowrap; flex-shrink: 0; }
+  .adj-input { font-size: 12px; padding: 5px 9px; border-radius: 7px; border: 1px solid #e5e7eb; font-family: inherit; width: 130px; outline: none; background: #fff; color: #111827; transition: border-color .15s; }
+  .adj-input:focus { border-color: #185FA5; box-shadow: 0 0 0 2px #EEF5FF; }
+  .adj-input.has-value { border-color: #185FA5; background: #f5f9ff; font-weight: 500; color: #185FA5; }
+  .driver-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #f3f4f6; gap: 8px; }
+  .driver-row:last-child { border-bottom: none; }
+  .driver-name { font-size: 12px; color: #6b7280; flex: 1; line-height: 1.4; }
+  .driver-vals { text-align: right; flex-shrink: 0; }
+  .driver-vals .dv { font-size: 11px; font-weight: 600; color: #2d6a2d; }
+  .mini-bar-track { height: 4px; background: #f3f4f6; border-radius: 2px; overflow: hidden; margin-top: 4px; width: 80px; margin-left: auto; }
+  .mini-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .synergy-box { background: #f9fafb; border-radius: 8px; padding: 10px 12px; }
+  .synergy-pt { font-size: 12px; color: #6b7280; line-height: 1.6; margin-bottom: 6px; }
+  .synergy-pt:last-child { margin-bottom: 0; }
+  .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .kpi-cell { background: #f9fafb; border-radius: 10px; padding: 12px 14px; text-align: center; }
+  .kpi-cell.span2 { grid-column: 1 / -1; }
+  .kpi-label { font-size: 10px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .kpi-value { font-size: 20px; font-weight: 600; color: #2d6a2d; line-height: 1.1; }
+  .kpi-cell.span2 .kpi-value { font-size: 26px; }
+  .kpi-sub { font-size: 10px; color: #9ca3af; margin-top: 3px; }
+  .yr-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
+  .yr-table th { text-align: right; padding: 5px 6px; color: #9ca3af; font-weight: 400; border-bottom: 1px solid #f3f4f6; font-size: 11px; }
+  .yr-table th:first-child { text-align: left; }
+  .yr-table td { text-align: right; padding: 5px 6px; color: #111827; }
+  .yr-table td:first-child { text-align: left; color: #6b7280; }
+  .yr-table tr.tot td { font-weight: 600; color: #2d6a2d; border-top: 1px solid #e5e7eb; }
+  .yr-table tr.inv td { color: #6b7280; }
+  .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; }
+  .chart-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6b7280; }
+  .chart-legend-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+  .sc-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 12px; }
+  .sc-row:last-child { border-bottom: none; }
+  .sc-load { flex: 1; text-align: left; background: none; border: none; cursor: pointer; font-weight: 600; color: #111827; font-size: 12px; font-family: inherit; padding: 0; }
+  .sc-load:hover { color: #185FA5; }
+  .sc-meta { color: #9ca3af; font-size: 11px; white-space: nowrap; }
+  .sc-del { font-size: 11px; color: #9ca3af; cursor: pointer; padding: 2px 7px; border-radius: 4px; border: 1px solid #e5e7eb; background: none; font-family: inherit; }
+  .sc-del:hover { background: #fef2f2; color: #dc2626; border-color: transparent; }
+  .sc-empty { font-size: 12px; color: #9ca3af; font-style: italic; margin-bottom: 10px; }
+  .save-row { display: flex; gap: 6px; margin-top: 10px; }
+  .save-row input { flex: 1; font-size: 12px; padding: 6px 10px; border-radius: 8px; border: 1px solid #e5e7eb; font-family: inherit; outline: none; }
+  .save-row input:focus { border-color: #2d6a2d; }
+  .btn { font-family: inherit; cursor: pointer; border-radius: 8px; font-size: 12px; padding: 6px 12px; border: 1px solid #e5e7eb; background: #f9fafb; color: #111827; font-weight: 500; }
+  .btn:hover { background: #f3f4f6; }
+  .btn-green { background: #2d6a2d; color: #fff; border-color: transparent; font-weight: 600; }
+  .btn-green:hover { background: #245824; }
+  .btn-save-trigger { width: 100%; margin-top: 10px; font-size: 12px; padding: 8px; }
+  .btn-generate { width: 100%; font-size: 13px; padding: 11px; border-radius: 10px; background: #2d6a2d; color: #fff; border: none; cursor: pointer; font-family: inherit; font-weight: 600; letter-spacing: 0.01em; }
+  .btn-generate:hover { background: #245824; }
+  .btn-lookup { font-family: inherit; cursor: pointer; border-radius: 8px; font-size: 12px; font-weight: 600; padding: 7px 16px; background: #2d6a2d; color: #fff; border: none; white-space: nowrap; }
+  .btn-lookup:hover { background: #245824; }
+  .assump-row { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+  .assump-row:last-child { border-bottom: none; }
+  .assump-row .al { color: #6b7280; }
+  .assump-row .av { font-weight: 600; }
+  .fte-box { margin: -2px 0 12px; padding: 8px 10px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+  .fte-derived { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+  .fte-derived strong { color: #111827; }
+  .fte-row { display: flex; align-items: center; gap: 8px; }
+  .fte-row-label { font-size: 11px; color: #6b7280; white-space: nowrap; flex-shrink: 0; }
+  .legend-bar { margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { font-size: 11px; }
+  .legend-pill { padding: 1px 7px; border-radius: 10px; font-weight: 600; margin-right: 4px; }
+  .no-uc { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: 13px; }
+  .section-toggle { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; background: none; border: none; font-family: inherit; width: 100%; padding: 0; margin-bottom: 0; }
+  .section-toggle .st-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; }
+  .section-toggle .st-arrow { font-size: 10px; color: #c4c9d4; transition: transform 0.2s; display: inline-block; }
+  .section-toggle.open .st-arrow { transform: rotate(90deg); }
+  .section-body { display: none; margin-top: 14px; }
+  .section-body.open { display: block; }
+  .bench-section { margin-top: 20px; }
+  .bench-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; overflow: hidden; margin-bottom: 10px; }
+  .bench-card:last-child { margin-bottom: 0; }
+  .bench-toggle { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; cursor: pointer; padding: 14px 20px; font-family: inherit; text-align: left; }
+  .bench-toggle:hover { background: #fafafa; }
+  .bench-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .bench-toggle-label { font-size: 13px; font-weight: 600; color: #111827; flex: 1; }
+  .bench-toggle-sub { font-size: 11px; color: #9ca3af; }
+  .bench-arrow { font-size: 10px; color: #9ca3af; transition: transform 0.2s; display: inline-block; }
+  .bench-toggle.open .bench-arrow { transform: rotate(90deg); }
+  .bench-body { display: none; padding: 0 20px 16px; }
+  .bench-body.open { display: block; }
+  .bench-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .bench-table th { text-align: left; padding: 6px 8px; color: #9ca3af; font-weight: 500; font-size: 11px; border-bottom: 1px solid #f3f4f6; text-transform: uppercase; letter-spacing: 0.04em; }
+  .bench-table td { padding: 7px 8px; color: #374151; vertical-align: top; border-bottom: 1px solid #f9fafb; }
+  .bench-table tr:last-child td { border-bottom: none; }
+  .bench-rate { font-weight: 600; color: #111827; }
+  .bench-source { color: #9ca3af; font-style: italic; font-size: 11px; }
+  .next-steps { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px 24px; margin-top: 20px; }
+  .next-steps-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #9ca3af; margin-bottom: 16px; }
+  .next-steps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .next-step-block { display: flex; flex-direction: column; gap: 8px; }
+  .next-step-label { font-size: 12px; font-weight: 600; color: #374151; }
+  .next-step-desc { font-size: 11px; color: #9ca3af; line-height: 1.5; }
+  .lookup-row { display: flex; gap: 8px; align-items: center; }
+  .lookup-row input[type=text] { flex: 1; font-size: 12px; padding: 7px 10px; border-radius: 8px; border: 1px solid #e5e7eb; font-family: inherit; outline: none; color: #111827; min-width: 0; }
+  .lookup-row input[type=text]:focus { border-color: #2d6a2d; box-shadow: 0 0 0 2px #eaf3de; }
+  .lookup-row input[type=text]::placeholder { color: #9ca3af; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } .real-note { display: none; } .next-steps-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="top-header">
+    <div class="brand">Pigment &mdash; Value Intelligence</div>
+    <h1>ROI Calculator</h1>
+    <p>Select use cases, set inputs, and model 3-year value. All benchmarks from Pigment's documented framework.</p>
+  </div>
+
+  <div class="uc-bar">
+    <span class="uc-label">Use cases</span>
+    <button class="uc-pill active" data-uc="fpa" style="background:#2d6a2d;color:#fff">FP&amp;A</button>
+    <button class="uc-pill" data-uc="spm">SPM</button>
+    <button class="uc-pill" data-uc="wfp">Workforce planning</button>
+    <button class="uc-pill" data-uc="scm">Supply chain</button>
+    <button class="uc-pill" data-uc="consol">Financial consolidations</button>
+  </div>
+
+  <div class="real-bar">
+    <div style="flex-shrink:0">
+      <div class="real-label">Benchmark realization</div>
+      <div class="real-big" id="real-disp">75%</div>
+    </div>
+    <div style="flex:1">
+      <input type="range" min="1" max="100" step="1" value="75" id="real-slider"
+        oninput="handleRealization(this)" onchange="handleRealizationCommit(this)">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#9ca3af;margin-top:4px">
+        <span>Conservative (1%)</span><span>Full benchmark value (100%)</span>
+      </div>
+    </div>
+    <div class="real-note">Scales all benefit outputs as a % of full benchmark value. Use to set conservative positioning for early-stage conversations.</div>
+  </div>
+
+  <div class="layout">
+    <div id="left-col"></div>
+    <div id="right-col"></div>
+  </div>
+
+  <div class="legend-bar">
+    <span class="legend-item" style="color:#3B6D11"><span class="legend-pill" style="background:#eaf3de">SOURCED</span>from public filings or verified research</span>
+    <span class="legend-item" style="color:#185FA5"><span class="legend-pill" style="background:#E6F1FB">ESTIMATED</span>derived from industry benchmarks</span>
+    <span class="legend-item" style="color:#854F0B"><span class="legend-pill" style="background:#FAEEDA">INTERNAL</span>from Pigment product benchmarks</span>
+  </div>
+
+  <div id="bench-section" class="bench-section"></div>
+
+  <div class="next-steps">
+    <div class="next-steps-title">Next steps with Claude</div>
+    <div class="next-steps-grid">
+      <div class="next-step-block">
+        <div class="next-step-label">Look up company data</div>
+        <div class="next-step-desc">Enter a company name and Claude will search public filings, 10-Ks, and earnings releases to find the inputs for this calculator.</div>
+        <div class="lookup-row">
+          <input type="text" id="company-input" placeholder="e.g. Salesforce, Michelin, Klarna...">
+          <button class="btn-lookup" id="lookup-btn">Look up &#8599;</button>
+        </div>
+      </div>
+      <div class="next-step-block">
+        <div class="next-step-label">Generate business case document</div>
+        <div class="next-step-desc">Opens Claude with your current inputs and computed results pre-loaded to produce a formatted .docx deliverable ready for the prospect.</div>
+        <button class="btn-generate" id="generate-btn">Generate business case &#8599;</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── PALETTE ───────────────────────────────────────────────────────────────────
+var PALETTE = { fpa:"#2d6a2d", spm:"#185FA5", wfp:"#854F0B", scm:"#993C1D", consol:"#534AB7", ai:"#5F5E5A" };
+
+// ── FORMATTERS ────────────────────────────────────────────────────────────────
+function fmtM(v) {
+  var a = Math.abs(v), s = v < 0 ? "-" : "";
+  if (a >= 1e9) return s + "$" + (Math.round(a/1e8)/10) + "B";
+  if (a >= 1e6) return s + "$" + (Math.round(a/1e5)/10) + "M";
+  if (a >= 1e3) return s + "$" + (Math.round(a/100)/10) + "K";
+  return s + "$" + Math.round(a).toLocaleString();
+}
+function fmtDisp(v, fmt) {
+  if (fmt === "M") return fmtM(v);
+  if (fmt === "%") return (Math.round(v * 1000) / 10) + "%";
+  if (fmt === "x") return (Math.round(v * 10) / 10) + "x";
+  return Math.round(v).toLocaleString();
+}
+function mkBadge(src) {
+  var map = { s:["SOURCED","badge-s"], e:["ESTIMATED","badge-e"], i:["INTERNAL","badge-i"] };
+  if (!src || !map[src]) return "";
+  return '<span class="badge ' + map[src][1] + '">' + map[src][0] + '</span>';
+}
+
+// ── SHARED FIELD DEFINITIONS ──────────────────────────────────────────────────
+var SH = {
+  revenue:   { id:"revenue",   label:"Annual revenue",         min:100e6, max:20e9,  step:50e6,  def:1e9,   fmt:"M" },
+  headcount: { id:"headcount", label:"Total headcount",        min:200,   max:100000,step:200,   def:3000,  fmt:"#" },
+  invest_y1: { id:"invest_y1", label:"Platform investment Y1", min:100e3, max:8e6,   step:50e3,  def:600e3, fmt:"M" },
+  invest_y2: { id:"invest_y2", label:"Platform investment Y2+",min:100e3, max:5e6,   step:50e3,  def:400e3, fmt:"M" },
+};
+
+// ── GLOBAL ADVANCED FIELDS ────────────────────────────────────────────────────
+var GLOBAL_ADV = [
+  { id:"g_risk",       label:"Risk adjustment",               min:0.01, max:0.50, step:0.01,  def:0.15,  fmt:"%", src:"s" },
+  { id:"g_ramp",       label:"Year 1 ramp factor",            min:0.10, max:1.00, step:0.05,  def:0.50,  fmt:"%", src:"s" },
+  { id:"g_fin_pct",    label:"Finance FTEs % of headcount",   min:0.005,max:0.10, step:0.005, def:0.02,  fmt:"%", src:"e" },
+  { id:"g_fin_salary", label:"Finance / planning avg salary",  min:80e3, max:300e3,step:5e3,   def:130e3, fmt:"M", src:"e" },
+  { id:"g_mod_salary", label:"Modeler Agent FTE value",        min:80e3, max:300e3,step:5e3,   def:130e3, fmt:"M", src:"i" },
+  { id:"g_ana_salary", label:"Analyst Agent FTE value",        min:80e3, max:300e3,step:5e3,   def:130e3, fmt:"M", src:"i" },
+];
+
+// ── SOURCE CITATIONS ──────────────────────────────────────────────────────────
+var SOURCE_CITATIONS = {
+  "SG&A forecast accuracy":        "Aberdeen Group: low performers 8% variance, best-in-class 3%",
+  "CapEx portfolio optimization":  "McKinsey: 15% project cost savings from optimized portfolio management",
+  "Planning process efficiency":   "Forrester TEI: 60% reduction in planning process time",
+  "Legacy system elimination":     "Gartner / APQC: 3-5 legacy tools retired over 2 years",
+  "Territory optimization":        "HBR: 2-7% productivity lift from territory optimization",
+  "Forecast accuracy":             "HBR / Revenue Operations: 1% revenue protection benchmark",
+  "Sales leader time recovery":    "Benchmark: 10% time recovery, modeled at 1% realization",
+  "Commission governance":         "Gartner: 3% of commission budget overpaid in error",
+  "RevOps planning efficiency":    "Forrester TEI: 60% planning process reduction",
+  "Labor spend optimization":      "Pigment benchmark: 0.3% of total labor spend",
+  "Recruiting cost reduction":     "Merritt Research: $18K avg cost per hire",
+  "Stock-out minimization":        "McKinsey: 1% of revenue lost to stock-outs",
+  "Expedited shipping reduction":  "APQC: expedited costs 10% of logistics; reduce to 3%",
+  "Inventory carrying cost":       "IBF / APQC: carrying cost 20% of inventory value",
+  "Close cycle compression":       "APQC / PwC: median close 6.4 days, top quartile 4.8 days",
+  "Intercompany elimination":      "Deloitte / EY: 0.10-0.20% of revenue in IC correction costs",
+  "Audit and reporting efficiency":"PwC: 15-20% of finance labor on reporting; 25% reduction achievable",
+};
+
+// ── BENCHMARK REFERENCE DATA ──────────────────────────────────────────────────
+var BENCH_DATA = {
+  fpa: { label:"FP&A", rows:[
+    { driver:"SG&A forecast accuracy",       rate:"5% SG&A improvement",             source:"Aberdeen Group" },
+    { driver:"CapEx portfolio optimization", rate:"15% savings, 40% platform attribution", source:"McKinsey" },
+    { driver:"Planning process efficiency",  rate:"60% process time reduction",       source:"Forrester TEI" },
+    { driver:"Legacy system elimination",    rate:"50% Y1, 100% Y2+",                source:"Gartner / APQC" },
+    { driver:"Modeler Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+    { driver:"Analyst Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+  ]},
+  spm: { label:"SPM", rows:[
+    { driver:"Territory optimization",       rate:"3% lift, 10% realization",         source:"Harvard Business Review" },
+    { driver:"Forecast accuracy",            rate:"1% revenue protection, 10% real.", source:"HBR / RevOps benchmark" },
+    { driver:"Sales leader time recovery",   rate:"1% of planner salary",             source:"Industry benchmark" },
+    { driver:"Commission governance",        rate:"3% overpay rate, 10% real.",       source:"Gartner" },
+    { driver:"RevOps planning efficiency",   rate:"3% of planner salary",             source:"Forrester TEI" },
+    { driver:"Modeler Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+    { driver:"Analyst Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+  ]},
+  wfp: { label:"Workforce planning", rows:[
+    { driver:"Labor spend optimization",     rate:"0.3% of total labor spend",        source:"Pigment benchmark" },
+    { driver:"Recruiting cost reduction",    rate:"$18K per hire, 5% reduction",      source:"Merritt Research" },
+    { driver:"Planning process efficiency",  rate:"60% process time reduction",       source:"Forrester TEI" },
+    { driver:"Legacy system elimination",    rate:"50% Y1, 100% Y2+",                source:"Gartner / APQC" },
+    { driver:"Modeler Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+    { driver:"Analyst Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+  ]},
+  scm: { label:"Supply chain", rows:[
+    { driver:"Stock-out minimization",       rate:"1% of revenue, 50% reduction",     source:"McKinsey" },
+    { driver:"Expedited shipping reduction", rate:"7% of logistics spend",            source:"APQC" },
+    { driver:"Inventory carrying cost",      rate:"20% carrying cost, 10% reduction", source:"IBF / APQC" },
+    { driver:"Planning process efficiency",  rate:"60% process time reduction",       source:"Forrester TEI" },
+    { driver:"Legacy system elimination",    rate:"50% Y1, 100% Y2+",                source:"Gartner" },
+    { driver:"Modeler Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+    { driver:"Analyst Agent",                rate:"1 FTE @ $130K, 50% Y1 ramp",      source:"Pigment Internal" },
+  ]},
+  consol: { label:"Financial consolidations", rows:[
+    { driver:"Close cycle compression",       rate:"2 days saved, 12 cycles/yr",      source:"APQC / PwC" },
+    { driver:"Intercompany elimination",      rate:"0.15% of revenue, 70% reduction", source:"Deloitte / EY" },
+    { driver:"Audit and reporting efficiency",rate:"18% allocation, 25% reduction",   source:"PwC" },
+    { driver:"Legacy system elimination",     rate:"50% Y1, 100% Y2+",               source:"Gartner / APQC" },
+    { driver:"Modeler Agent",                 rate:"1 FTE @ $130K, 50% Y1 ramp",     source:"Pigment Internal" },
+    { driver:"Analyst Agent",                 rate:"1 FTE @ $130K, 50% Y1 ramp",     source:"Pigment Internal" },
+  ]},
+};
+
+// ── USE CASE DEFINITIONS ──────────────────────────────────────────────────────
+var UCS = {
+  fpa: {
+    label:"FP&A",
+    fields:[
+      {id:"revenue",label:"Annual revenue",min:100e6,max:20e9,step:50e6,def:1e9,fmt:"M"},
+      {id:"sga",label:"Annual SG&A",min:20e6,max:5e9,step:20e6,def:300e6,fmt:"M",src:"e"},
+      {id:"capex",label:"Annual CapEx",min:5e6,max:3e9,step:10e6,def:150e6,fmt:"M",src:"s"},
+      {id:"headcount",label:"Total headcount",min:200,max:100000,step:200,def:3000,fmt:"#"},
+      {id:"toolspend",label:"Legacy tool spend / yr",min:0,max:30e6,step:500e3,def:12e6,fmt:"M",src:"e"},
+      {id:"invest_y1",label:"Platform investment Y1",min:100e3,max:8e6,step:50e3,def:600e3,fmt:"M"},
+      {id:"invest_y2",label:"Platform investment Y2+",min:100e3,max:5e6,step:50e3,def:400e3,fmt:"M"},
+    ],
+    adv:[
+      {section:"SG&A forecast accuracy"},
+      {id:"fpa_sga_rate",label:"SG&A improvement rate",min:0.01,max:0.15,step:0.005,def:0.05,fmt:"%",src:"s"},
+      {section:"CapEx portfolio optimization"},
+      {id:"fpa_capex_save",label:"CapEx project cost savings",min:0.05,max:0.30,step:0.01,def:0.15,fmt:"%",src:"s"},
+      {id:"fpa_capex_attr",label:"Platform attribution %",min:0.10,max:0.80,step:0.05,def:0.40,fmt:"%",src:"e"},
+      {section:"Planning process efficiency"},
+      {id:"fpa_plan_hrs",label:"Planning cycles per year",min:4,max:24,step:1,def:12,fmt:"#",src:"s"},
+      {id:"fpa_plan_hrscyc",label:"Hours per FTE per cycle",min:10,max:80,step:5,def:40,fmt:"#",src:"s"},
+      {id:"fpa_plan_reduc",label:"Process time reduction",min:0.20,max:0.80,step:0.05,def:0.60,fmt:"%",src:"s"},
+      {section:"Legacy system elimination"},
+      {id:"fpa_tool_y1pct",label:"Y1 elimination %",min:0.25,max:1.00,step:0.05,def:0.50,fmt:"%",src:"e"},
+    ],
+    calc:function(s,a) {
+      var finFTE = getFinFTE(s,a), hr = a.g_fin_salary/2080;
+      var RISK = 1-a.g_risk, RAMP = a.g_ramp;
+      var d1 = s.sga*a.fpa_sga_rate*RISK;
+      var d2 = s.capex*a.fpa_capex_save*a.fpa_capex_attr*RISK;
+      var d3 = finFTE*a.fpa_plan_hrscyc*a.fpa_plan_hrs*hr*a.fpa_plan_reduc*RISK;
+      return {drivers:[
+        {n:"SG&A forecast accuracy",src:"s",y1:d1*RAMP,yn:d1},
+        {n:"CapEx portfolio optimization",src:"s",y1:d2*RAMP,yn:d2},
+        {n:"Planning process efficiency",src:"s",y1:d3*RAMP,yn:d3},
+        {n:"Legacy system elimination",src:"e",y1:s.toolspend*a.fpa_tool_y1pct,yn:s.toolspend},
+      ],inv:[s.invest_y1,s.invest_y2,s.invest_y2]};
+    }
+  },
+  spm: {
+    label:"SPM",
+    fields:[
+      {id:"revenue",label:"Annual revenue",min:100e6,max:20e9,step:50e6,def:1e9,fmt:"M"},
+      {id:"gm",label:"Gross margin %",min:0.10,max:0.90,step:0.01,def:0.60,fmt:"%",src:"s"},
+      {id:"gtm_hc",label:"GTM / quota-bearing headcount",min:25,max:5000,step:25,def:200,fmt:"#",src:"s"},
+      {id:"planners",label:"Revenue planning FTEs",min:1,max:50,step:1,def:5,fmt:"#",src:"e"},
+      {id:"invest_y1",label:"Platform investment Y1",min:100e3,max:8e6,step:50e3,def:600e3,fmt:"M"},
+      {id:"invest_y2",label:"Platform investment Y2+",min:100e3,max:5e6,step:50e3,def:400e3,fmt:"M"},
+    ],
+    adv:[
+      {section:"Territory optimization"},
+      {id:"spm_terr_lift",label:"Productivity lift (benchmark)",min:0.01,max:0.10,step:0.005,def:0.03,fmt:"%",src:"s"},
+      {id:"spm_terr_real",label:"Realization rate",min:0.05,max:0.30,step:0.01,def:0.10,fmt:"%",src:"e"},
+      {section:"Forecast accuracy"},
+      {id:"spm_fc_prot",label:"Revenue protection benchmark",min:0.005,max:0.03,step:0.001,def:0.01,fmt:"%",src:"s"},
+      {id:"spm_fc_real",label:"Realization rate",min:0.05,max:0.30,step:0.01,def:0.10,fmt:"%",src:"e"},
+      {section:"Sales leader time recovery"},
+      {id:"spm_sl_salary",label:"Avg planner salary",min:100e3,max:500e3,step:10e3,def:200e3,fmt:"M",src:"e"},
+      {id:"spm_sl_real",label:"Time recovery realization",min:0.005,max:0.05,step:0.005,def:0.01,fmt:"%",src:"e"},
+      {section:"Commission governance"},
+      {id:"spm_ote",label:"Blended GTM OTE",min:80e3,max:400e3,step:10e3,def:150e3,fmt:"M",src:"e"},
+      {id:"spm_comp_ratio",label:"Comp ratio",min:0.20,max:0.60,step:0.05,def:0.40,fmt:"%",src:"e"},
+      {id:"spm_overpay",label:"Commission overpay rate",min:0.01,max:0.08,step:0.005,def:0.03,fmt:"%",src:"s"},
+      {id:"spm_comm_real",label:"Realization rate",min:0.05,max:0.30,step:0.01,def:0.10,fmt:"%",src:"e"},
+      {section:"RevOps planning efficiency"},
+      {id:"spm_revops_real",label:"Efficiency realization",min:0.01,max:0.10,step:0.005,def:0.03,fmt:"%",src:"s"},
+    ],
+    calc:function(s,a) {
+      var RAMP = a.g_ramp;
+      var d1 = s.revenue*a.spm_terr_lift*s.gm*a.spm_terr_real;
+      var d2 = s.revenue*a.spm_fc_prot*s.gm*a.spm_fc_real;
+      var d3 = s.planners*a.spm_sl_salary*a.spm_sl_real;
+      var d4 = s.gtm_hc*a.spm_ote*a.spm_comp_ratio*a.spm_overpay*a.spm_comm_real;
+      var d5 = s.planners*a.g_fin_salary*a.spm_revops_real;
+      return {drivers:[
+        {n:"Territory optimization",src:"s",y1:d1*RAMP,yn:d1},
+        {n:"Forecast accuracy",src:"s",y1:d2*RAMP,yn:d2},
+        {n:"Sales leader time recovery",src:"e",y1:d3*RAMP,yn:d3},
+        {n:"Commission governance",src:"s",y1:d4*RAMP,yn:d4},
+        {n:"RevOps planning efficiency",src:"s",y1:d5*RAMP,yn:d5},
+      ],inv:[s.invest_y1,s.invest_y2,s.invest_y2]};
+    }
+  },
+  wfp: {
+    label:"Workforce planning",
+    fields:[
+      {id:"labor_spend",label:"Total annual labor spend",min:50e6,max:10e9,step:25e6,def:500e6,fmt:"M",src:"i"},
+      {id:"annual_hires",label:"Annual hires",min:50,max:20000,step:50,def:500,fmt:"#",src:"s"},
+      {id:"unplanned_pct",label:"Unplanned hire %",min:0.05,max:0.40,step:0.01,def:0.15,fmt:"%",src:"e"},
+      {id:"headcount",label:"Total headcount",min:200,max:100000,step:200,def:3000,fmt:"#"},
+      {id:"toolspend_wfp",label:"Legacy tool spend / yr",min:0,max:20e6,step:250e3,def:8e6,fmt:"M",src:"e"},
+      {id:"invest_y1",label:"Platform investment Y1",min:100e3,max:8e6,step:50e3,def:600e3,fmt:"M"},
+      {id:"invest_y2",label:"Platform investment Y2+",min:100e3,max:5e6,step:50e3,def:400e3,fmt:"M"},
+    ],
+    adv:[
+      {section:"Labor spend optimization"},
+      {id:"wfp_labor_rate",label:"Optimization rate",min:0.001,max:0.01,step:0.001,def:0.003,fmt:"%",src:"i"},
+      {section:"Recruiting cost reduction"},
+      {id:"wfp_cph",label:"Avg cost per hire",min:8e3,max:40e3,step:1e3,def:18e3,fmt:"M",src:"s"},
+      {id:"wfp_recruit_red",label:"Unplanned hire reduction",min:0.02,max:0.15,step:0.01,def:0.05,fmt:"%",src:"s"},
+      {section:"Planning process efficiency"},
+      {id:"wfp_plan_hrs",label:"Planning cycles per year",min:4,max:24,step:1,def:12,fmt:"#",src:"s"},
+      {id:"wfp_plan_hrscyc",label:"Hours per FTE per cycle",min:10,max:80,step:5,def:40,fmt:"#",src:"s"},
+      {id:"wfp_plan_reduc",label:"Process time reduction",min:0.20,max:0.80,step:0.05,def:0.60,fmt:"%",src:"s"},
+      {section:"Legacy system elimination"},
+      {id:"wfp_tool_y1pct",label:"Y1 elimination %",min:0.25,max:1.00,step:0.05,def:0.50,fmt:"%",src:"e"},
+    ],
+    calc:function(s,a) {
+      var finFTE = getFinFTE(s,a), hr = a.g_fin_salary/2080;
+      var RISK = 1-a.g_risk, RAMP = a.g_ramp;
+      var d1 = s.labor_spend*a.wfp_labor_rate*RISK;
+      var d2 = s.annual_hires*s.unplanned_pct*a.wfp_recruit_red*a.wfp_cph*RISK;
+      var d3 = finFTE*a.wfp_plan_hrscyc*a.wfp_plan_hrs*hr*a.wfp_plan_reduc*RISK;
+      return {drivers:[
+        {n:"Labor spend optimization",src:"i",y1:d1*RAMP,yn:d1},
+        {n:"Recruiting cost reduction",src:"s",y1:d2*RAMP,yn:d2},
+        {n:"Planning process efficiency",src:"s",y1:d3*RAMP,yn:d3},
+        {n:"Legacy system elimination",src:"e",y1:s.toolspend_wfp*a.wfp_tool_y1pct,yn:s.toolspend_wfp},
+      ],inv:[s.invest_y1,s.invest_y2,s.invest_y2]};
+    }
+  },
+  scm: {
+    label:"Supply chain",
+    fields:[
+      {id:"revenue",label:"Annual revenue",min:100e6,max:20e9,step:50e6,def:1e9,fmt:"M"},
+      {id:"logistics",label:"Annual logistics spend",min:5e6,max:2e9,step:5e6,def:200e6,fmt:"M",src:"s"},
+      {id:"inventory",label:"Inventory value (on hand)",min:10e6,max:5e9,step:25e6,def:500e6,fmt:"M",src:"s"},
+      {id:"headcount",label:"Total headcount",min:200,max:100000,step:200,def:3000,fmt:"#"},
+      {id:"toolspend_scm",label:"Legacy tool spend / yr",min:0,max:20e6,step:250e3,def:10e6,fmt:"M",src:"e"},
+      {id:"invest_y1",label:"Platform investment Y1",min:100e3,max:8e6,step:50e3,def:600e3,fmt:"M"},
+      {id:"invest_y2",label:"Platform investment Y2+",min:100e3,max:5e6,step:50e3,def:400e3,fmt:"M"},
+    ],
+    adv:[
+      {section:"Stock-out minimization"},
+      {id:"scm_stockout_pct",label:"Revenue lost to stock-outs",min:0.005,max:0.03,step:0.001,def:0.01,fmt:"%",src:"s"},
+      {id:"scm_stockout_red",label:"Stock-out reduction",min:0.20,max:0.80,step:0.05,def:0.50,fmt:"%",src:"s"},
+      {section:"Expedited shipping reduction"},
+      {id:"scm_expedite_red",label:"Expedited cost reduction",min:0.03,max:0.15,step:0.01,def:0.07,fmt:"%",src:"s"},
+      {section:"Inventory carrying cost"},
+      {id:"scm_carry_rate",label:"Carrying cost rate",min:0.10,max:0.35,step:0.01,def:0.20,fmt:"%",src:"s"},
+      {id:"scm_carry_red",label:"Carrying cost reduction",min:0.05,max:0.20,step:0.01,def:0.10,fmt:"%",src:"s"},
+      {section:"Planning process efficiency"},
+      {id:"scm_plan_hrs",label:"Planning cycles per year",min:4,max:24,step:1,def:12,fmt:"#",src:"s"},
+      {id:"scm_plan_hrscyc",label:"Hours per FTE per cycle",min:10,max:80,step:5,def:40,fmt:"#",src:"s"},
+      {id:"scm_plan_reduc",label:"Process time reduction",min:0.20,max:0.80,step:0.05,def:0.60,fmt:"%",src:"s"},
+      {section:"Legacy system elimination"},
+      {id:"scm_tool_y1pct",label:"Y1 elimination %",min:0.25,max:1.00,step:0.05,def:0.50,fmt:"%",src:"e"},
+    ],
+    calc:function(s,a) {
+      var finFTE = getFinFTE(s,a), hr = a.g_fin_salary/2080;
+      var RISK = 1-a.g_risk, RAMP = a.g_ramp;
+      var d1 = s.revenue*a.scm_stockout_pct*a.scm_stockout_red*RISK;
+      var d2 = s.logistics*a.scm_expedite_red*RISK;
+      var d3 = s.inventory*a.scm_carry_rate*a.scm_carry_red*RISK;
+      var d4 = finFTE*a.scm_plan_hrscyc*a.scm_plan_hrs*hr*a.scm_plan_reduc*RISK;
+      return {drivers:[
+        {n:"Stock-out minimization",src:"s",y1:d1*RAMP,yn:d1},
+        {n:"Expedited shipping reduction",src:"s",y1:d2*RAMP,yn:d2},
+        {n:"Inventory carrying cost",src:"s",y1:d3*RAMP,yn:d3},
+        {n:"Planning process efficiency",src:"s",y1:d4*RAMP,yn:d4},
+        {n:"Legacy system elimination",src:"e",y1:s.toolspend_scm*a.scm_tool_y1pct,yn:s.toolspend_scm},
+      ],inv:[s.invest_y1,s.invest_y2,s.invest_y2]};
+    }
+  },
+  consol: {
+    label:"Financial consolidations",
+    fields:[
+      {id:"revenue",label:"Annual consolidated revenue",min:100e6,max:20e9,step:100e6,def:2e9,fmt:"M"},
+      {id:"headcount",label:"Total headcount",min:200,max:100000,step:200,def:3000,fmt:"#"},
+      {id:"toolspend_consol",label:"Legacy consolidation tool spend / yr",min:0,max:30e6,step:500e3,def:10e6,fmt:"M",src:"e"},
+      {id:"invest_y1",label:"Platform investment Y1",min:100e3,max:8e6,step:50e3,def:600e3,fmt:"M"},
+      {id:"invest_y2",label:"Platform investment Y2+",min:100e3,max:5e6,step:50e3,def:400e3,fmt:"M"},
+    ],
+    adv:[
+      {section:"Close cycle compression"},
+      {id:"con_close_pct",label:"Close FTEs % of finance FTEs",min:0.10,max:0.60,step:0.05,def:0.30,fmt:"%",src:"s"},
+      {id:"con_days_saved",label:"Days saved per close cycle",min:1,max:5,step:0.5,def:2,fmt:"x",src:"s"},
+      {id:"con_close_cycles",label:"Close cycles per year",min:4,max:13,step:1,def:12,fmt:"#",src:"s"},
+      {section:"Intercompany elimination"},
+      {id:"con_ic_rate",label:"IC error rate (% of revenue)",min:0.001,max:0.004,step:0.0005,def:0.0015,fmt:"%",src:"s"},
+      {id:"con_ic_red",label:"IC error reduction",min:0.40,max:0.90,step:0.05,def:0.70,fmt:"%",src:"s"},
+      {section:"Audit and reporting efficiency"},
+      {id:"con_audit_alloc",label:"Reporting labor allocation",min:0.10,max:0.25,step:0.01,def:0.18,fmt:"%",src:"s"},
+      {id:"con_audit_red",label:"Efficiency gain",min:0.10,max:0.40,step:0.05,def:0.25,fmt:"%",src:"s"},
+      {section:"Legacy system elimination"},
+      {id:"con_tool_y1pct",label:"Y1 elimination %",min:0.25,max:1.00,step:0.05,def:0.50,fmt:"%",src:"e"},
+    ],
+    calc:function(s,a) {
+      var finFTE = getFinFTE(s,a), closeFTE = Math.round(finFTE*a.con_close_pct);
+      var dailyCost = a.g_fin_salary/250;
+      var RISK = 1-a.g_risk, RAMP = a.g_ramp;
+      var d1 = closeFTE*dailyCost*a.con_days_saved*a.con_close_cycles*RISK;
+      var d2 = s.revenue*a.con_ic_rate*a.con_ic_red*RISK;
+      var d3 = finFTE*a.g_fin_salary*a.con_audit_alloc*a.con_audit_red*RISK;
+      return {drivers:[
+        {n:"Close cycle compression",src:"s",y1:d1*RAMP,yn:d1},
+        {n:"Intercompany elimination",src:"s",y1:d2*RAMP,yn:d2},
+        {n:"Audit and reporting efficiency",src:"s",y1:d3*RAMP,yn:d3},
+        {n:"Legacy system elimination",src:"e",y1:s.toolspend_consol*a.con_tool_y1pct,yn:s.toolspend_consol},
+      ],inv:[s.invest_y1,s.invest_y2,s.invest_y2]};
+    }
+  },
+};
+
+var SYNERGY = {
+  "consol+fpa":"Actuals-to-plan with zero integration lag - consolidated actuals feed planning immediately.",
+  "consol+wfp":"Workforce costs flow from WFP into consolidated financials without re-entry.",
+  "fpa+spm":"Revenue assumptions flow from SPM territory plans into FP&A automatically.",
+  "fpa+wfp":"Headcount-to-P&L - workforce plan drives compensation expense in the financial model.",
+  "fpa+scm":"Inventory and logistics assumptions surface directly in working capital and cash flow.",
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+var activeUCs = ["fpa"];
+var state = {};
+var advState = {};
+var driverOverrides = {};
+var scenarios = [];
+var chartInst = null;
+var chartInst2 = null;
+var savingOpen = false;
+var realizationPct = 0.75;
+var advOpen = {};
+var sectionOpen = {}; // tracks model-assumptions and value-drivers collapsed state
+var benchOpen = {};
+var overrideTimer = null;
+
+// Init state
+Object.keys(UCS).forEach(function(uc) {
+  UCS[uc].fields.forEach(function(f) { if (!(f.id in state)) state[f.id] = f.def; });
+});
+GLOBAL_ADV.forEach(function(f) { advState[f.id] = f.def; });
+advState.fin_fte_override = null;
+Object.keys(UCS).forEach(function(uc) {
+  (UCS[uc].adv||[]).forEach(function(f) { if (f.id) advState[f.id] = f.def; });
+});
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function getFinFTE(s, a) {
+  return (a.fin_fte_override != null && a.fin_fte_override > 0)
+    ? Math.round(a.fin_fte_override)
+    : Math.round(s.headcount * a.g_fin_pct);
+}
+
+function loadScenarios() {
+  try { scenarios = JSON.parse(localStorage.getItem("pigment_roi_scenarios") || "[]"); } catch(e) { scenarios = []; }
+}
+function saveScenarios() {
+  try { localStorage.setItem("pigment_roi_scenarios", JSON.stringify(scenarios)); } catch(e) {}
+}
+
+// ── COMPUTE ───────────────────────────────────────────────────────────────────
+function compute() {
+  var seen = {}, y1=0, y2=0, y3=0, allDrivers=[], maxInv=[0,0,0];
+  activeUCs.forEach(function(uc) {
+    var r = UCS[uc].calc(state, advState);
+    r.drivers.forEach(function(d) {
+      if (!seen[d.n]) {
+        seen[d.n] = true;
+        var hasOvr = driverOverrides[d.n] != null;
+        var rawYn = hasOvr ? driverOverrides[d.n] : d.yn;
+        var rawY1 = hasOvr ? rawYn * advState.g_ramp : d.y1;
+        var rd = {n:d.n, src:d.src, uc:uc, y1:rawY1*realizationPct, yn:rawYn*realizationPct, overridden:hasOvr};
+        allDrivers.push(rd); y1+=rd.y1; y2+=rd.yn; y3+=rd.yn;
+      }
+    });
+    maxInv = [Math.max(maxInv[0],r.inv[0]), Math.max(maxInv[1],r.inv[1]), Math.max(maxInv[2],r.inv[2])];
+  });
+  var aiY1 = advState.g_mod_salary*0.5*realizationPct;
+  var aiYn = advState.g_mod_salary*realizationPct;
+  var aaY1 = advState.g_ana_salary*0.5*realizationPct;
+  var aaYn = advState.g_ana_salary*realizationPct;
+  allDrivers.push({n:"Modeler Agent",src:"i",uc:"ai",y1:aiY1,yn:aiYn,overridden:false});
+  allDrivers.push({n:"Analyst Agent",src:"i",uc:"ai",y1:aaY1,yn:aaYn,overridden:false});
+  y1+=aiY1+aaY1; y2+=aiYn+aaYn; y3+=aiYn+aaYn;
+  var inv=maxInv, total3=y1+y2+y3, totalInv=inv[0]+inv[1]+inv[2], net=total3-totalInv;
+  var rawROI = totalInv>0 ? total3/totalInv : 0;
+  var roiDisp = Math.round(rawROI) + "x";
+  var monthly = y1/12, pbMo = monthly>0 ? Math.ceil(inv[0]/monthly) : null;
+  var pbDisp = pbMo ? (pbMo>24 ? "24+ mo." : pbMo+" mo.") : "N/A";
+  return {y1:y1,y2:y2,y3:y3,total3:total3,inv:inv,totalInv:totalInv,net:net,rawROI:rawROI,roiDisp:roiDisp,pbDisp:pbDisp,allDrivers:allDrivers};
+}
+
+// ── FIELD HTML ────────────────────────────────────────────────────────────────
+function fieldHTML(f, val, isAdv) {
+  var dispVal = fmtDisp(val, f.fmt);
+  var prefix = isAdv ? "av_" : "fv_";
+  var handler = isAdv ? "handleAdv" : "handleSlider";
+  var commitHandler = isAdv ? "handleAdvCommit" : "handleSliderCommit";
+  return '<div class="field">'
+    + '<div class="field-label"><span>' + f.label + mkBadge(f.src) + '</span>'
+    + '<span class="field-val" id="' + prefix + f.id + '">' + dispVal + '</span></div>'
+    + '<input type="range" min="' + f.min + '" max="' + f.max + '" step="' + f.step + '" value="' + val + '"'
+    + ' data-id="' + f.id + '" data-fmt="' + f.fmt + '"'
+    + ' oninput="' + handler + '(this)" onchange="' + commitHandler + '(this)">'
+    + '</div>';
+}
+
+// ── DRIVER SECTION HTML ───────────────────────────────────────────────────────
+function driverSectionHTML(driverName, benchmarkYn) {
+  var citation = SOURCE_CITATIONS[driverName] || "";
+  var hasOverride = driverOverrides[driverName] != null;
+  var inputVal = hasOverride ? fmtM(driverOverrides[driverName]) : "";
+  var dnSafe = driverName.replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+  return '<div class="adv-driver-header">'
+    + '<div class="adv-driver-name">' + driverName + '</div>'
+    + '<div class="adv-driver-bench-line">'
+    + '<span class="adv-driver-bench-val">' + fmtM(benchmarkYn) + '</span>'
+    + (citation ? ' &mdash; <span class="adv-driver-source">' + citation + '</span>' : '')
+    + '</div></div>'
+    + '<div class="adj-override-row">'
+    + '<span class="adj-override-label">Adjusted value:</span>'
+    + '<input class="adj-input' + (hasOverride ? ' has-value' : '') + '" type="text"'
+    + ' data-driver="' + dnSafe + '"'
+    + ' value="' + inputVal + '"'
+    + ' placeholder="e.g. ' + fmtM(benchmarkYn) + '"'
+    + ' oninput="scheduleOverride(this)"'
+    + ' onblur="commitOverrideEl(this)"'
+    + ' onkeydown="if(event.key===\'Enter\'){ commitOverrideEl(this); this.blur(); }">'
+    + '</div>';
+}
+
+// ── ADV SECTION HTML ──────────────────────────────────────────────────────────
+function advSectionHTML(uc, fields, calcResult) {
+  var open = advOpen[uc] || false;
+  var driverMap = {};
+  if (calcResult) calcResult.drivers.forEach(function(d) { driverMap[d.n] = d.yn; });
+  var inner = "";
+  fields.forEach(function(f) {
+    if (f.section) { inner += driverSectionHTML(f.section, driverMap[f.section] || 0); return; }
+    inner += fieldHTML(f, advState[f.id], true);
+  });
+  var toggleLabel = activeUCs.length > 1 ? UCS[uc].label + " advanced assumptions" : "Advanced assumptions";
+  return '<button class="adv-toggle' + (open ? ' open' : '') + '" onclick="toggleAdv(\'' + uc + '\')" style="margin-top:14px">'
+    + '<span class="arrow">&#9658;</span> ' + toggleLabel
+    + '</button>'
+    + '<div class="adv-section' + (open ? ' open' : '') + '" id="adv_' + uc + '">' + inner + '</div>';
+}
+
+// ── RENDER LEFT ───────────────────────────────────────────────────────────────
+function renderLeft() {
+  var col = document.getElementById("left-col");
+  if (activeUCs.length === 0) { col.innerHTML = '<div class="no-uc">Select at least one use case above.</div>'; return; }
+  var isMulti = activeUCs.length > 1;
+  var renderedShared = {};
+  var r = compute();
+  var html = "";
+
+  activeUCs.forEach(function(uc) {
+    var cfg = UCS[uc];
+    html += '<div class="card" style="border-left:3px solid ' + PALETTE[uc] + '">';
+    html += '<div class="card-uc-head" style="color:' + PALETTE[uc] + '">' + cfg.label + '</div>';
+    cfg.fields.forEach(function(f) {
+      if (isMulti && (f.id === "invest_y1" || f.id === "invest_y2") && renderedShared[f.id]) return;
+      renderedShared[f.id] = true;
+      html += fieldHTML(f, state[f.id] != null ? state[f.id] : f.def, false);
+    });
+    html += '</div>';
+  });
+
+  // Model assumptions card
+  var maOpen = sectionOpen['model-assumptions'] || false;
+  html += '<div class="card">'
+    + '<button class="section-toggle' + (maOpen ? ' open' : '') + '" id="sec-toggle-model-assumptions" onclick="toggleSection(\'model-assumptions\')">'
+    + '<span class="st-label">Model assumptions</span><span class="st-arrow">&#9658;</span>'
+    + '</button>'
+    + '<div class="section-body' + (maOpen ? ' open' : '') + '" id="sec-body-model-assumptions">';
+  GLOBAL_ADV.forEach(function(f) {
+    html += fieldHTML(f, advState[f.id], true);
+    if (f.id === 'g_fin_pct') {
+      var derivedFTE = Math.round((state.headcount || 3000) * advState.g_fin_pct);
+      var hasOvr = advState.fin_fte_override != null && advState.fin_fte_override > 0;
+      var ovrVal = hasOvr ? Math.round(advState.fin_fte_override) : "";
+      html += '<div class="fte-box">'
+        + '<div class="fte-derived">Derived planning FTEs: <strong>' + derivedFTE + ' FTEs</strong></div>'
+        + '<div class="fte-row">'
+        + '<span class="fte-row-label">Override FTE count:</span>'
+        + '<input class="adj-input' + (hasOvr ? ' has-value' : '') + '" type="text"'
+        + ' data-driver="__fin_fte__"'
+        + ' value="' + ovrVal + '"'
+        + ' placeholder="e.g. ' + derivedFTE + '"'
+        + ' oninput="scheduleFinFTE(this)"'
+        + ' onblur="commitFinFTE(this)"'
+        + ' onkeydown="if(event.key===\'Enter\'){ commitFinFTE(this); this.blur(); }">'
+        + (hasOvr ? '<span style="font-size:10px;color:#185FA5;font-style:italic;">overriding % calc</span>' : '')
+        + '</div></div>';
+    }
+  });
+  activeUCs.forEach(function(uc) {
+    var cfg = UCS[uc];
+    if (cfg.adv && cfg.adv.length) {
+      var calcRes = UCS[uc].calc(state, advState);
+      html += advSectionHTML(uc, cfg.adv, calcRes);
+    }
+  });
+  html += '</div></div>'; // close section-body and card
+
+  // Value drivers
+  var vdOpen = sectionOpen['value-drivers'] || false;
+  var maxYn = Math.max.apply(null, r.allDrivers.map(function(d) { return d.yn; }).concat([1]));
+  html += '<div class="card">'
+    + '<button class="section-toggle' + (vdOpen ? ' open' : '') + '" id="sec-toggle-value-drivers" onclick="toggleSection(\'value-drivers\')">'
+    + '<span class="st-label">Value drivers (Y1 / run rate)</span><span class="st-arrow">&#9658;</span>'
+    + '</button>'
+    + '<div class="section-body' + (vdOpen ? ' open' : '') + '" id="sec-body-value-drivers">';
+  r.allDrivers.forEach(function(d) {
+    var pct = Math.round(d.yn / maxYn * 100);
+    var barColor = d.uc === "ai" ? PALETTE.ai : (PALETTE[d.uc] || "#2d6a2d");
+    var ovBadge = d.overridden ? '<span class="badge-override">ADJUSTED</span>' : "";
+    html += '<div class="driver-row">'
+      + '<span class="driver-name">' + d.n + mkBadge(d.src) + ovBadge + '</span>'
+      + '<span class="driver-vals"><div class="dv">' + fmtM(d.y1) + ' / ' + fmtM(d.yn) + '</div>'
+      + '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div>'
+      + '</span></div>';
+  });
+  html += '</div></div>'; // close section-body and card
+
+  // Synergy
+  if (isMulti) {
+    var pts = [];
+    var has = function(uc) { return activeUCs.indexOf(uc) >= 0; };
+    if (has("consol") && has("fpa"))  pts.push(SYNERGY["consol+fpa"]);
+    if (has("consol") && has("wfp"))  pts.push(SYNERGY["consol+wfp"]);
+    if (has("fpa") && has("spm"))     pts.push(SYNERGY["fpa+spm"]);
+    if (has("fpa") && has("wfp"))     pts.push(SYNERGY["fpa+wfp"]);
+    if (has("fpa") && has("scm"))     pts.push(SYNERGY["fpa+scm"]);
+    pts.push("Single Modeler Agent and Analyst Agent serve all use cases - no duplication of AI value.");
+    html += '<div class="card"><div class="card-title">Platform synergy</div><div class="synergy-box">';
+    pts.forEach(function(pt) { html += '<div class="synergy-pt">' + pt + '</div>'; });
+    html += '</div></div>';
+  }
+
+  // Scenarios
+  html += '<div class="card"><div class="card-title">Scenarios</div>';
+  if (scenarios.length === 0) html += '<div class="sc-empty">No saved scenarios yet.</div>';
+  scenarios.forEach(function(sc) {
+    html += '<div class="sc-row">'
+      + '<button class="sc-load" onclick="loadScenario(' + sc.id + ')">' + sc.name + '</button>'
+      + '<span class="sc-meta">' + sc.ucs.join(", ") + ' &middot; ' + sc.ts + '</span>'
+      + '<button class="sc-del" onclick="deleteScenario(' + sc.id + ')">remove</button>'
+      + '</div>';
+  });
+  if (savingOpen) {
+    html += '<div class="save-row">'
+      + '<input type="text" id="sc-name-input" placeholder="Scenario name..." onkeydown="if(event.key===\'Enter\') confirmSave()">'
+      + '<button class="btn btn-green" onclick="confirmSave()">Save</button>'
+      + '<button class="btn" onclick="cancelSave()">Cancel</button>'
+      + '</div>';
+  } else {
+    html += '<button class="btn btn-save-trigger" onclick="openSave()">Save current scenario</button>';
+  }
+  html += '</div>';
+
+  col.innerHTML = html;
+  if (savingOpen) { var inp = document.getElementById("sc-name-input"); if (inp) inp.focus(); }
+}
+
+// ── RENDER RIGHT ──────────────────────────────────────────────────────────────
+function renderRight() {
+  var col = document.getElementById("right-col");
+  var r = compute();
+
+  var html = '<div class="card"><div class="kpi-grid">'
+    + '<div class="kpi-cell span2"><div class="kpi-label">3-year net benefit</div><div class="kpi-value">' + fmtM(r.net) + '</div><div class="kpi-sub">after all investment</div></div>'
+    + '<div class="kpi-cell"><div class="kpi-label">ROI (3-year)</div><div class="kpi-value">' + r.roiDisp + '</div><div class="kpi-sub">return on investment</div></div>'
+    + '<div class="kpi-cell"><div class="kpi-label">Year 1 benefit</div><div class="kpi-value">' + fmtM(r.y1) + '</div><div class="kpi-sub">ramp-adjusted</div></div>'
+    + '<div class="kpi-cell"><div class="kpi-label">Payback</div><div class="kpi-value">' + r.pbDisp + '</div><div class="kpi-sub">on Y1 investment</div></div>'
+    + '<div class="kpi-cell"><div class="kpi-label">Full run rate</div><div class="kpi-value">' + fmtM(r.y2) + '</div><div class="kpi-sub">from Year 2</div></div>'
+    + '</div></div>';
+
+  html += '<div class="card"><div class="card-title">Benefit vs investment</div>'
+    + '<div class="chart-legend" id="chart-legend"></div>'
+    + '<div style="position:relative;height:200px"><canvas id="roi-chart"></canvas></div></div>';
+
+  html += '<div class="card"><div class="card-title">Cumulative value by use case</div>'
+    + '<div class="chart-legend" id="chart-legend-2"></div>'
+    + '<div style="position:relative;height:200px"><canvas id="roi-chart-2"></canvas></div></div>';
+
+  html += '<div class="card"><div class="card-title">3-year summary</div>'
+    + '<table class="yr-table"><thead><tr><th></th><th>Y1</th><th>Y2</th><th>Y3</th><th>Total</th></tr></thead><tbody>'
+    + '<tr><td>Gross benefit</td><td>' + fmtM(r.y1) + '</td><td>' + fmtM(r.y2) + '</td><td>' + fmtM(r.y3) + '</td><td>' + fmtM(r.total3) + '</td></tr>'
+    + '<tr class="inv"><td>Investment</td><td>(' + fmtM(r.inv[0]) + ')</td><td>(' + fmtM(r.inv[1]) + ')</td><td>(' + fmtM(r.inv[2]) + ')</td><td>(' + fmtM(r.totalInv) + ')</td></tr>'
+    + '<tr class="tot"><td>Net benefit</td><td>' + fmtM(r.y1-r.inv[0]) + '</td><td>' + fmtM(r.y2-r.inv[1]) + '</td><td>' + fmtM(r.y3-r.inv[2]) + '</td><td>' + fmtM(r.net) + '</td></tr>'
+    + '</tbody></table></div>';
+
+  col.innerHTML = html;
+
+  var legendEl = document.getElementById("chart-legend");
+  if (legendEl) legendEl.innerHTML =
+    '<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#2d6a2d"></span>Gross benefit</span>'
+    + '<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:#e87040"></span>Investment cost</span>';
+
+  var legendEl2 = document.getElementById("chart-legend-2");
+  if (legendEl2) {
+    var lh = activeUCs.map(function(uc) {
+      return '<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:' + PALETTE[uc] + '"></span>' + UCS[uc].label + '</span>';
+    }).join("");
+    lh += '<span class="chart-legend-item"><span class="chart-legend-swatch" style="background:' + PALETTE.ai + '"></span>AI Agents</span>';
+    legendEl2.innerHTML = lh;
+  }
+
+  setTimeout(function() { renderChart(r); renderLineChart(r); }, 0);
+}
+
+function renderChart(r) {
+  var canvas = document.getElementById("roi-chart");
+  if (!canvas) return;
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  chartInst = new Chart(canvas, {
+    type:"bar",
+    data:{ labels:["Year 1","Year 2","Year 3"], datasets:[
+      { label:"Gross benefit", data:[Math.round(r.y1),Math.round(r.y2),Math.round(r.y3)], backgroundColor:"#2d6a2d", borderRadius:3, borderSkipped:false, stack:"stack" },
+      { label:"Investment cost", data:[-Math.round(r.inv[0]),-Math.round(r.inv[1]),-Math.round(r.inv[2])], backgroundColor:"#e87040", borderRadius:3, borderSkipped:false, stack:"stack" }
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c){ return c.dataset.label+": "+fmtM(Math.abs(c.raw)); }}} },
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{font:{size:11,family:"DM Sans, sans-serif"}} },
+        y:{ stacked:true, grid:{color:"rgba(0,0,0,0.05)"}, ticks:{font:{size:11,family:"DM Sans, sans-serif"}, callback:function(v){ return fmtM(v); }} }
+      }
+    }
+  });
+}
+
+function renderLineChart(r) {
+  var canvas2 = document.getElementById("roi-chart-2");
+  if (!canvas2) return;
+  if (chartInst2) { chartInst2.destroy(); chartInst2 = null; }
+  var datasets = activeUCs.map(function(uc) {
+    var res = UCS[uc].calc(state, advState);
+    var ucY1 = res.drivers.reduce(function(a,d){ return a + d.y1*realizationPct; }, 0);
+    var ucYn = res.drivers.reduce(function(a,d){ return a + d.yn*realizationPct; }, 0);
+    return {
+      label: UCS[uc].label,
+      data: [Math.round(ucY1), Math.round(ucY1+ucYn), Math.round(ucY1+ucYn+ucYn)],
+      borderColor: PALETTE[uc], backgroundColor: PALETTE[uc]+"22",
+      borderWidth:2, pointRadius:4, pointHoverRadius:6, fill:false, tension:0.3
+    };
+  });
+  var aiY1 = (advState.g_mod_salary+advState.g_ana_salary)*0.5*realizationPct;
+  var aiYn = (advState.g_mod_salary+advState.g_ana_salary)*realizationPct;
+  datasets.push({ label:"AI Agents", data:[Math.round(aiY1),Math.round(aiY1+aiYn),Math.round(aiY1+aiYn+aiYn)], borderColor:PALETTE.ai, backgroundColor:PALETTE.ai+"22", borderWidth:2, pointRadius:4, pointHoverRadius:6, fill:false, tension:0.3 });
+  chartInst2 = new Chart(canvas2, {
+    type:"line", data:{ labels:["Year 1","Year 2","Year 3"], datasets:datasets },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c){ return c.dataset.label+": "+fmtM(c.raw); }}} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{size:11,family:"DM Sans, sans-serif"}} },
+        y:{ grid:{color:"rgba(0,0,0,0.05)"}, ticks:{font:{size:11,family:"DM Sans, sans-serif"}, callback:function(v){ return fmtM(v); }} }
+      }
+    }
+  });
+}
+
+// ── RENDER BENCHMARKS ─────────────────────────────────────────────────────────
+function renderBenchmarks() {
+  var el = document.getElementById("bench-section");
+  if (!el) return;
+  if (activeUCs.length === 0) { el.innerHTML = ""; return; }
+  var html = "";
+  activeUCs.forEach(function(uc) {
+    var bd = BENCH_DATA[uc];
+    if (!bd) return;
+    var open = benchOpen[uc] || false;
+    html += '<div class="bench-card">'
+      + '<button class="bench-toggle' + (open ? ' open' : '') + '" id="bench-toggle-' + uc + '" onclick="toggleBench(\'' + uc + '\')">'
+      + '<span class="bench-dot" style="background:' + PALETTE[uc] + '"></span>'
+      + '<span class="bench-toggle-label">' + bd.label + ' benchmarks &amp; sources</span>'
+      + '<span class="bench-toggle-sub">' + bd.rows.length + ' drivers</span>'
+      + '<span class="bench-arrow">&#9658;</span>'
+      + '</button>'
+      + '<div class="bench-body' + (open ? ' open' : '') + '" id="bench-body-' + uc + '">'
+      + '<table class="bench-table">'
+      + '<thead><tr><th>Driver</th><th>Benchmark rate</th><th>Source</th></tr></thead><tbody>';
+    bd.rows.forEach(function(row) {
+      html += '<tr><td>' + row.driver + '</td><td><span class="bench-rate">' + row.rate + '</span></td><td><span class="bench-source">' + row.source + '</span></td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  });
+  el.innerHTML = html;
+}
+
+function toggleBench(uc) {
+  benchOpen[uc] = !benchOpen[uc];
+  var btn = document.getElementById("bench-toggle-" + uc);
+  var body = document.getElementById("bench-body-" + uc);
+  if (btn) btn.classList.toggle("open", benchOpen[uc]);
+  if (body) body.classList.toggle("open", benchOpen[uc]);
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll() { renderLeft(); renderRight(); renderBenchmarks(); }
+
+// ── SLIDER HANDLERS ───────────────────────────────────────────────────────────
+function handleSlider(inp) {
+  state[inp.dataset.id] = parseFloat(inp.value);
+  var el = document.getElementById("fv_" + inp.dataset.id);
+  if (el) el.textContent = fmtDisp(state[inp.dataset.id], inp.dataset.fmt);
+  renderRight();
+}
+function handleSliderCommit(inp) {
+  state[inp.dataset.id] = parseFloat(inp.value);
+  renderLeft();
+}
+function handleAdv(inp) {
+  advState[inp.dataset.id] = parseFloat(inp.value);
+  var el = document.getElementById("av_" + inp.dataset.id);
+  if (el) el.textContent = fmtDisp(advState[inp.dataset.id], inp.dataset.fmt);
+  renderRight();
+}
+function handleAdvCommit(inp) {
+  advState[inp.dataset.id] = parseFloat(inp.value);
+  renderLeft();
+}
+function handleRealization(inp) {
+  realizationPct = parseInt(inp.value) / 100;
+  document.getElementById("real-disp").textContent = inp.value + "%";
+  renderRight();
+}
+function handleRealizationCommit(inp) {
+  realizationPct = parseInt(inp.value) / 100;
+  renderLeft();
+}
+function toggleAdv(uc) {
+  advOpen[uc] = !advOpen[uc];
+  var btn = document.querySelector('.adv-toggle[onclick="toggleAdv(\'' + uc + '\')"]');
+  var sec = document.getElementById("adv_" + uc);
+  if (btn) btn.classList.toggle("open", advOpen[uc]);
+  if (sec) sec.classList.toggle("open", advOpen[uc]);
+}
+function toggleSection(key) {
+  sectionOpen[key] = !sectionOpen[key];
+  var btn = document.getElementById("sec-toggle-" + key);
+  var body = document.getElementById("sec-body-" + key);
+  if (btn) btn.classList.toggle("open", sectionOpen[key]);
+  if (body) body.classList.toggle("open", sectionOpen[key]);
+}
+function toggleUC(uc) {
+  if (activeUCs.indexOf(uc) >= 0) {
+    if (activeUCs.length === 1) return;
+    activeUCs = activeUCs.filter(function(u) { return u !== uc; });
+  } else {
+    activeUCs.push(uc);
+  }
+  document.querySelectorAll(".uc-pill").forEach(function(btn) {
+    var u = btn.dataset.uc, on = activeUCs.indexOf(u) >= 0;
+    btn.classList.toggle("active", on);
+    btn.style.background = on ? PALETTE[u] : "#f3f4f6";
+    btn.style.color = on ? "#fff" : "#6b7280";
+  });
+  renderAll();
+}
+
+// ── OVERRIDE HANDLERS ─────────────────────────────────────────────────────────
+function parseMoneyVal(raw) {
+  var s = raw.trim().replace(/[$, ]/g, "").toUpperCase();
+  if (!s) return null;
+  var mult = 1;
+  if (s.charAt(s.length-1) === "B") { mult = 1e9; s = s.slice(0,-1); }
+  else if (s.charAt(s.length-1) === "M") { mult = 1e6; s = s.slice(0,-1); }
+  else if (s.charAt(s.length-1) === "K") { mult = 1e3; s = s.slice(0,-1); }
+  var num = parseFloat(s) * mult;
+  return (!isNaN(num) && num >= 0) ? num : null;
+}
+function scheduleOverride(el) {
+  if (overrideTimer) clearTimeout(overrideTimer);
+  overrideTimer = setTimeout(function() { _applyOverride(el, false); }, 700);
+}
+function commitOverrideEl(el) {
+  if (overrideTimer) { clearTimeout(overrideTimer); overrideTimer = null; }
+  _applyOverride(el, true);
+}
+function _applyOverride(el, updateLeft) {
+  var driverName = el.dataset.driver;
+  var cleaned = el.value.trim();
+  if (!cleaned) {
+    driverOverrides[driverName] = null;
+    el.classList.remove("has-value");
+  } else {
+    var num = parseMoneyVal(cleaned);
+    if (num !== null) { driverOverrides[driverName] = num; el.classList.add("has-value"); }
+  }
+  renderRight();
+  if (updateLeft) renderLeft();
+}
+function scheduleFinFTE(el) {
+  if (overrideTimer) clearTimeout(overrideTimer);
+  overrideTimer = setTimeout(function() { _applyFinFTE(el, false); }, 700);
+}
+function commitFinFTE(el) {
+  if (overrideTimer) { clearTimeout(overrideTimer); overrideTimer = null; }
+  _applyFinFTE(el, true);
+}
+function _applyFinFTE(el, updateLeft) {
+  var raw = el.value.trim();
+  if (!raw) {
+    advState.fin_fte_override = null;
+    el.classList.remove("has-value");
+  } else {
+    var num = parseInt(raw.replace(/[^0-9]/g, ""));
+    if (!isNaN(num) && num > 0) { advState.fin_fte_override = num; el.classList.add("has-value"); }
+  }
+  renderRight();
+  if (updateLeft) renderLeft();
+}
+
+// ── SCENARIO HANDLERS ─────────────────────────────────────────────────────────
+function openSave()   { savingOpen = true;  renderLeft(); }
+function cancelSave() { savingOpen = false; renderLeft(); }
+function confirmSave() {
+  var inp = document.getElementById("sc-name-input");
+  var name = inp ? inp.value.trim() : "";
+  if (!name) return;
+  scenarios.unshift({ id:Date.now(), name:name, ucs:activeUCs.slice(), state:Object.assign({},state), advState:Object.assign({},advState), driverOverrides:Object.assign({},driverOverrides), ts:new Date().toLocaleDateString() });
+  if (scenarios.length > 10) scenarios = scenarios.slice(0,10);
+  saveScenarios(); savingOpen = false; renderLeft();
+}
+function loadScenario(id) {
+  var snap = null;
+  scenarios.forEach(function(s) { if (s.id === id) snap = s; });
+  if (!snap) return;
+  activeUCs = snap.ucs.slice();
+  state = Object.assign(state, snap.state);
+  if (snap.advState) advState = Object.assign(advState, snap.advState);
+  if (snap.driverOverrides) driverOverrides = Object.assign({}, snap.driverOverrides);
+  document.querySelectorAll(".uc-pill").forEach(function(btn) {
+    var u = btn.dataset.uc, on = activeUCs.indexOf(u) >= 0;
+    btn.classList.toggle("active", on);
+     btn.style.background = on ? PALETTE[u] : "#f3f4f6";
+    btn.style.color = on ? "#fff" : "#6b7280";
+  });
+  renderAll();
+}
+function handleGenerate() {
+  var r = compute();
+  var ucList = activeUCs.map(function(uc) { return UCS[uc].label; }).join(", ");
+  var inputSummary = Object.keys(state).map(function(k) { return k + ": " + fmtM(state[k]); }).join(", ");
+  var prompt = "Build a full Pigment business case document for the following use cases: " + ucList + ". Key inputs: " + inputSummary + ". Computed results: 3-year net benefit " + fmtM(r.net) + ", ROI " + r.roiDisp + ", Year 1 benefit " + fmtM(r.y1) + ", full run rate from Y2 " + fmtM(r.y2) + ", payback " + r.pbDisp + ". Please produce the .docx and .html deliverables per the standard Pigment business case format.";
+  window.open("https://claude.ai/new?q=" + encodeURIComponent(prompt), "_blank");
+}
+function handleLookup() {
+  var company = document.getElementById("company-input").value.trim();
+  if (!company) { alert("Please enter a company name first."); return; }
+  var ucList = activeUCs.map(function(uc) { return UCS[uc].label; }).join(", ");
+  var fieldList = [
+    "Annual revenue (total, from latest 10-K or earnings release)",
+    "Annual SG&A expense",
+    "Annual CapEx (capital expenditures)",
+    "Total headcount (employees)",
+    "Gross margin % (if SPM is selected)",
+    "GTM or quota-bearing sales headcount (if SPM is selected)",
+    "Total annual labor and compensation spend (if Workforce Planning is selected)",
+    "Annual hires and new employees per year (if Workforce Planning is selected)",
+    "Annual logistics or supply chain spend (if Supply Chain is selected)",
+    "Total inventory value on hand (if Supply Chain is selected)",
+    "Estimated annual EPM or planning tool spend",
+  ].join("\n- ");
+  var prompt = "I am building a financial business case for " + company + " to evaluate Pigment for the following use cases: " + ucList + ".\n\nPlease search the web for " + company + " most recent publicly available financial data - prioritize their latest 10-K annual report, earnings press releases, investor day presentations, and SEC filings.\n\nReturn the following figures in a clean numbered list, with the source and fiscal year for each item. If a figure is not publicly available, say Not found and provide a reasonable estimate from comparable companies.\n\nFields needed:\n- " + fieldList + "\n\nFormat each line as:\n[Field name]: [Value] ([Source, e.g. FY2024 10-K])";
+  window.open("https://claude.ai/new?q=" + encodeURIComponent(prompt), "_blank");
+}
+document.querySelectorAll(".uc-pill").forEach(function(btn) {
+  btn.addEventListener("click", function() { toggleUC(btn.dataset.uc); });
+});
+document.getElementById("generate-btn").addEventListener("click", handleGenerate);
+document.getElementById("lookup-btn").addEventListener("click", handleLookup);
+document.getElementById("company-input").addEventListener("keydown", function(e) {
+  if (e.key === "Enter") handleLookup();
+});
+loadScenarios();
+renderAll();
+</script>
+</body>
+</html>
